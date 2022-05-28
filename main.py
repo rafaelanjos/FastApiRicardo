@@ -1,8 +1,10 @@
+from calendar import c
 from email.policy import default
 from pickle import FALSE, TRUE
 from typing import List
 import databases
 import sqlalchemy
+from sqlalchemy import delete, update, insert
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -69,24 +71,25 @@ async def create_tarefa(tarefa: TarefaCadastro):
 
 @app.delete("/api/tarefas/{id}")
 async def delete_tarefa(id: int):
-    # apagar uma tarefa
+    return await database.execute(tarefas.delete().where(tarefas.c.id==id))
+    
 
 
-@app.get("/api/tarefas/{id}", response_model=Tarefa)
-async def get_terefa():
+#@app.get("/api/tarefas/{id}", response_model=Tarefa)
+#async def get_terefa():
     # obj 01: consulta a tarefa pelo id e retorna ela.
 
     # obj 02: se não existe retorne 404
 
 #deixe por ultimo
-@app.put("/api/tarefas/concluido/{id}", response_model=Tarefa)
-async def update_tarefa(id: int):
+#@app.put("/api/tarefas/concluido/{id}", response_model=Tarefa)
+#async def update_tarefa(id: int):
     # codigo inicio
     # buscar no banco pelo ID (cenario registro que existe) (2 linhas de codigo)
     # tarefa.concluido = not tarefa.concluido
     # atualiza o banco de dados com o novo valor do atributo concluido (update) (2 linhas de codigo)
     # retornar objeto tarefa alterado
-    return Tarefa(id=id, descricao=f"Você deve trocar o valor de concluido. da tarefa {id}", concluido=False)
+    #return Tarefa(id=id, descricao=f"Você deve trocar o valor de concluido. da tarefa {id}", concluido=False)
     #codigo termino
 
     #depois - depois que o update tiver funcionando
