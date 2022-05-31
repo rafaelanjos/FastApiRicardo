@@ -4,9 +4,9 @@ from pickle import FALSE, TRUE
 from typing import List
 import databases
 import sqlalchemy
-from sqlalchemy import delete, update, insert
+from sqlalchemy import delete, update, insert, select
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 DATABASE_URL = "sqlite:///./FastRicardoDB.db"
@@ -75,12 +75,17 @@ async def delete_tarefa(id: int):
     
 
 
-#@app.get("/api/tarefas/{id}", response_model=Tarefa)
-#async def get_terefa():
-    # obj 01: consulta a tarefa pelo id e retorna ela.
+@app.get("/api/tarefas/{id}", response_model=Tarefa)
+async def get_terefa(id: int):
+    query = tarefas.select().where(tarefas.c.id==id) # Estou montando uma consulta.
+    model = await database.fetch_one(query) # Executei uma consulta no banco e aguarda o retorno de um objeto tarefa.
+    if model: # Se model tem valor?
+        return model
+    else:
+        raise HTTPException(status_code=404, detail="Tarefa não encontrada.")
+        
 
-    # obj 02: se não existe retorne 404
-
+        
 #deixe por ultimo
 #@app.put("/api/tarefas/concluido/{id}", response_model=Tarefa)
 #async def update_tarefa(id: int):
