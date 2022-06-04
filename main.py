@@ -5,9 +5,8 @@ from typing import List
 import databases
 import sqlalchemy
 from sqlalchemy import delete, update, insert, select
-
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 
 DATABASE_URL = "sqlite:///./FastRicardoDB.db"
 
@@ -32,11 +31,13 @@ metadata.create_all(engine)
 
 app = FastAPI()
 
+
 # Classe modelo de negocio
 class Tarefa(BaseModel):
     id: int
     descricao: str
     concluido: bool
+
 
 class TarefaCadastro(BaseModel):
     descricao: str
@@ -69,11 +70,11 @@ async def create_tarefa(tarefa: TarefaCadastro):
     last_record_id = await database.execute(query)
     return Tarefa(id=last_record_id, descricao=tarefa.descricao, concluido=False)
 
+
 @app.delete("/api/tarefas/{id}")
 async def delete_tarefa(id: int):
     return await database.execute(tarefas.delete().where(tarefas.c.id==id))
     
-
 
 @app.get("/api/tarefas/{id}", response_model=Tarefa)
 async def get_terefa(id: int):
@@ -85,17 +86,14 @@ async def get_terefa(id: int):
         raise HTTPException(status_code=404, detail="Tarefa não encontrada.")
         
 
-        
-#deixe por ultimo
-#@app.put("/api/tarefas/concluido/{id}", response_model=Tarefa)
-#async def update_tarefa(id: int):
-    # codigo inicio
-    # buscar no banco pelo ID (cenario registro que existe) (2 linhas de codigo)
-    # tarefa.concluido = not tarefa.concluido
-    # atualiza o banco de dados com o novo valor do atributo concluido (update) (2 linhas de codigo)
-    # retornar objeto tarefa alterado
-    #return Tarefa(id=id, descricao=f"Você deve trocar o valor de concluido. da tarefa {id}", concluido=False)
-    #codigo termino
-
-    #depois - depois que o update tiver funcionando
-    #se registro da tarefa não existe retorne status code 404 - Not Found
+@app.put("/api/tarefas/concluido/{id}", response_model=Tarefa)
+async def update_tarefa(id: int):
+    query = tarefas.select().where(tarefas.c.id==id)
+    model = await database.fetch_one(query)
+    if model:
+        concluido = not model.concluido
+        query_update = tarefas.update().where(tarefas.c.id==id).values(concluido=concluido)
+        await database.execute(query_update)
+        return Tarefa(id=model.id, descricao=model.descricao, concluido=concluido)
+    else:
+        raise HTTPException(status_code=404, detail="Tarefa nõa encontrada.")
